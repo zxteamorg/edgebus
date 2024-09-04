@@ -137,7 +137,7 @@ cat "${SCRIPT_DIR}/docker-compose.yaml.mustache" | \
     --mount "type=bind,source=${SCRIPT_DIR}/startup.config,target=/tmp/startup.config" \
     --mount "type=bind,source=${STARTUP_LOCAL_CONFIG_FILE},target=/tmp/startup.config.local" \
     --env IS_LINUX_HOST --env RUN_DOMAIN --env RUN_HOSTNAME \
-    theanurin/configuration-templates:20230324 \
+    theanurin/configuration-templates:20231204 \
       --engine mustache \
       --config-file=/tmp/startup.config \
       --config-env \

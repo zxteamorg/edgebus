@@ -72,11 +72,10 @@ services:
 {{#POSTGRES_USEDATAVOLUME}}
       - postgres-data:/data
 {{/POSTGRES_USEDATAVOLUME}}
-      - ./dbseed/10-extensions.sql:/updates/10-extensions.sql
-      - ./dbseed/11-edgebus-users.sql:/updates/11-edgebus-users.sql
-      - ./dbseed/12-edgebus-database.sql:/updates/12-edgebus-database.sql
+      - ./dbseed/11-edgebus-users.sql:/dbseed/11-edgebus-users.sql
+      - ./dbseed/12-edgebus-database.sql:/dbseed/12-edgebus-database.sql
 {{#POSTGRES_USEDBSEED}}
-      - ./dbseed/edgebus-local:/updates/edgebus-local
+      - ./dbseed/edgebus-local:/dbseed/edgebus-local
 {{/POSTGRES_USEDBSEED}}
       - ./.gitignore:/tmp/.gitignore # This need for case no other volumes
     networks:
@@ -135,10 +134,10 @@ services:
     #entrypoint: [ "/usr/local/bin/docker-entrypoint-edgebus-api.sh" ]
     command: "--config-toml-file=/etc/edgebus/edgebus.toml --config-toml-file=/etc/edgebus/edgebus.local.toml --config-file=/etc/edgebus/edgebus.local.env --config-env"
     ports:
-      - 127.0.0.1:12001:8081/tcp
-      - 127.0.0.1:12003:8083/tcp
-      - 127.0.0.1:12010:8090/tcp
-      - 127.0.0.1:12011:8091/tcp
+      - 127.0.0.1:12001:12001/tcp
+      - 127.0.0.1:12003:12003/tcp
+      - 127.0.0.1:12010:12010/tcp
+      - 127.0.0.1:12011:12011/tcp
     volumes:
       - ./configs/edgebus/edgebus.toml:/etc/edgebus/edgebus.toml
       - ./configs/edgebus/edgebus.local.toml:/etc/edgebus/edgebus.local.toml
@@ -165,6 +164,6 @@ services:
     cap_add: [ 'NET_ADMIN', 'NET_RAW' ]
     restart: on-failure
     environment:
-        - PORTS=12000
+      - PORTS=12001,12003,12010,12011
 {{/IS_LINUX_HOST}}
 {{/EDGEBUS_TYPESCRIPT_RUN}}
