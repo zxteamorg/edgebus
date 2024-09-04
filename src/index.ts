@@ -2,9 +2,10 @@ import {
 	FDisposable, FExecutionContext,
 	FLoggerLabelsExecutionContext, FInitable,
 	FLogger, FExceptionArgument, FDecimal, FDecimalRoundMode,
-	FDecimalBackendNumber, FExceptionInvalidOperation, FConfigurationException, FException
+	FDecimalBackendNumber, FExceptionInvalidOperation, FConfigurationException, FException,
+	makeDisposable
 } from "@freemework/common";
-import { FLauncherRuntime, FLauncherRestartRequiredException } from "@freemework/hosting";
+import { FLauncherRuntimeFactory, FLauncherRestartRequiredException } from "@freemework/hosting";
 
 import * as _ from "lodash";
 
@@ -45,7 +46,7 @@ export * from "./misc";
 export class RestartRequireException extends FLauncherRestartRequiredException { }
 
 
-export default async function (executionContext: FExecutionContext, settings: Settings): Promise<FLauncherRuntime> {
+export default async function (executionContext: FExecutionContext, settings: Settings): Promise<FDisposable> {
 	executionContext = new FLoggerLabelsExecutionContext(executionContext, {
 		service: packageInfo.name,
 		version: packageInfo.version
@@ -313,21 +314,20 @@ export default async function (executionContext: FExecutionContext, settings: Se
 	}
 	/* ------------------------ */
 
-	return {
-		async destroy() {
-			log.info(executionContext, "Destroying DI runtime...");
+	return makeDisposable(async function () {
+		log.info(executionContext, "Destroying DI runtime...");
 
-			for (const hardcodedItem of itemsToDispose.reverse()) {
-				await hardcodedItem.dispose();
-			}
-
-			await FDisposable.disposeAll(
-				// Endpoints should dispose first (reply 503, while finishing all active requests)
-				ProviderLocator.default.get(EndpointsProvider),
-				ProviderLocator.default.get(HostingProvider),
-				ProviderLocator.default.get(MessageBusProvider),
-				storageProvider
-			);
+		for (const hardcodedItem of itemsToDispose.reverse()) {
+			await hardcodedItem.dispose();
 		}
-	};
+
+		await FDisposable.disposeAll(
+			// Endpoints should dispose first (reply 503, while finishing all active requests)
+			ProviderLocator.default.get(EndpointsProvider),
+			ProviderLocator.default.get(HostingProvider),
+			ProviderLocator.default.get(MessageBusProvider),
+			storageProvider
+		);
+
+	});
 }

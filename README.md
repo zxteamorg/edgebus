@@ -18,7 +18,7 @@ This is `src-typescript-service` branch of **EdgeBus** multi project repository 
 
 ```shell
 cp .env-example .env
-nvm use 18
+nvm use 22
 npm install
 npm run build
 npm start

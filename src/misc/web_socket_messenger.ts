@@ -7,7 +7,7 @@ import {
 	FLogger,
 } from "@freemework/common";
 
-import * as WebSocket from "ws";
+import WebSocket from "ws";
 import * as http from "http";
 import * as crypto from "crypto";
 import * as  _ from "lodash";
@@ -208,16 +208,16 @@ export class WebSocketMessenger
 
 		// Here, we have good(established) websocket
 
-		ws.on("close", e => {
+		ws.on("close", () => {
 			this._notifySubscribers(this.initExecutionContext, new WebSocketMessenger.ConnectionError("Connection was closed."));
 			this._callbacks.splice(0, this._callbacks.length); // Prevent send any message to client (due client's destroy)
 			ws.removeAllListeners();
 			this._ws = null;
 		});
-		ws.on("error", e => {
+		ws.on("error", (e: any) => {
 			this._log.debug(this.initExecutionContext, "WebSocket emits 'error'", FException.wrapIfNeeded(e));
 		});
-		ws.on("unexpected-response", (request, response) => {
+		ws.on("unexpected-response", () => {
 			if (this._log.isWarnEnabled) {
 				this._log.warn(this.initExecutionContext, "WebSocket emits 'unexpected-response'");
 			} else {

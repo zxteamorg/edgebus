@@ -1,7 +1,7 @@
-import { FConfigurationException, FException, FExceptionAggregate, FExceptionInvalidOperation, FExecutionContext, FLogger, FLoggerLabelsExecutionContext } from "@freemework/common";
+import { FException, FExceptionAggregate, FExceptionInvalidOperation, FExecutionContext, FLogger, FLoggerLabelsExecutionContext } from "@freemework/common";
 
 import { DoneCallback, Job, JobOptions, Queue } from "bull";
-import * as Bull from "bull";
+import Bull from "bull";
 import { RedisOptions } from 'ioredis';
 import { createBullBoard } from "@bull-board/api";
 import { BullAdapter } from "@bull-board/api/bullAdapter";
