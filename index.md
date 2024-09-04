@@ -37,6 +37,7 @@ Similar products:
 * [Amazon SNS](https://docs.aws.amazon.com/sns/latest/dg/welcome.html)
 * [Azure Service Bus](https://azure.microsoft.com/en-us/products/service-bus/)
 * [Google Cloud Pub/Sub](https://cloud.google.com/pubsub)
+* [Pipedream](https://pipedream.com) - Workflow automation for developers
 
 
 ## Synchronous Calls

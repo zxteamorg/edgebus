@@ -18,8 +18,18 @@
 	"files.encoding": "utf8",
 	"files.eol": "\n",
 	"files.exclude": {
-		"_site": true,
+		"_site": false,
 		".jekyll-cache": true,
 	},
-	"git.rebaseWhenSync": true
+	"git.rebaseWhenSync": true,
+	"markdownlint.config": {
+		"default": true,
+		"blanks-around-fences": false,
+		"blanks-around-lists": false,
+		"no-bare-urls": false,
+	},
+	"cSpell.words": [
+		"edgebus",
+		"theanurin"
+	]
 }
