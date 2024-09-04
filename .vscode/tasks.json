@@ -5,8 +5,8 @@
 	"options": {
 		"cwd": "${workspaceRoot}",
 		"env": {
-			"NODE_ENV": "development",
-			"BUILD_TARGET": "local"
+			// "NODE_ENV": "development",
+			"BUILD_CONFIGURATION": "local"
 		}
 	},
 	"tasks": [
@@ -22,7 +22,6 @@
 			},
 			"problemMatcher": []
 		},
-		
 		{
 			"label": "Postgres Database Install (Full)",
 			"group": "none",

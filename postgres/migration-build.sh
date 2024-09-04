@@ -9,13 +9,14 @@ while [ -L "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symli
 done
 DIR=$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )
 
-if [ -z "${ZONE}" ]; then
-	ZONE=local
+export BUILD_CONFIGURATION="${1}"
+
+if [ -z "${BUILD_CONFIGURATION}" ]; then
+  export BUILD_CONFIGURATION="local"
 fi
 
 docker run --interactive --tty --rm \
   --mount type=bind,source="${DIR}",target=/data \
-  --env ENV=${ZONE} \
-  --env "database.name=edgebus-${ZONE}" \
+  --env BUILD_CONFIGURATION="${BUILD_CONFIGURATION}" \
   --env SOURCE_PATH=migration \
-  theanurin/sqlmigrationbuilder:1.0.1
+  theanurin/sqlmigrationbuilder:2.0

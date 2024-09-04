@@ -10,14 +10,10 @@ done
 DIR=$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )
 
 
-DO_BUILD=no
 DO_IGNORE_ERROR=no
 # parse args
 while [ "$1" != "" ]; do
 	case "$1" in
-		--build)
-			DO_BUILD=yes
-			;;
 		--ignore-errors)
 			DO_IGNORE_ERROR=yes
 			;;
@@ -29,21 +25,42 @@ while [ "$1" != "" ]; do
 	shift
 done
 
+export BUILD_CONFIGURATION="${1}"
 
-if [ "${DO_BUILD}" == "yes" ]; then
-	echo "Building migration sources..."
-	${DIR}/migration-build.sh
-	echo
+if [ -z "${BUILD_CONFIGURATION}" ]; then
+  export BUILD_CONFIGURATION="local"
 fi
 
 if [ "${DO_IGNORE_ERROR}" != "yes" ]; then
 	set -e
 fi
 
+DATABASE_NAME=$(echo -n "{{ database.name }}" | \
+  docker run \
+    --interactive --rm \
+    --mount type=bind,source="${DIR}",target=/tmp \
+    theanurin/configuration-templates:20231204 \
+      --engine mustache \
+      --config-file=/tmp/database.config \
+      --config-file="/tmp/database-${BUILD_CONFIGURATION}.config"
+)
+
+DATABASE_OWNER=$(echo -n "{{ database.user.owner }}" | \
+  docker run \
+    --interactive --rm \
+    --mount type=bind,source="${DIR}",target=/tmp \
+    theanurin/configuration-templates:20231204 \
+      --engine mustache \
+      --config-file=/tmp/database.config \
+      --config-file="/tmp/database-${BUILD_CONFIGURATION}.config"
+)
+
+export POSTGRES_URL="postgres://${DATABASE_OWNER}@postgres:5432/${DATABASE_NAME}"
+
 echo "Apply migrations..."
 docker run --network=edgebus-local-tier \
   --rm --interactive --tty \
-  --env "POSTGRES_URL=postgres://edgebus-local-owner@postgres:5432/edgebus-local" \
+  --env POSTGRES_URL \
   --env LOG_LEVEL=info \
-  theanurin/sqlmigrationrunner:0.10.14 \
+  theanurin/sqlmigrationrunner:1.0 \
     rollback --no-sleep
