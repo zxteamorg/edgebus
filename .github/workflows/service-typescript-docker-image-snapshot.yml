@@ -1,10 +1,10 @@
 #
-# Copied from https://github.com/zxteamorg/.github/blob/master/workflow-templates/docker-image-release.yml
+# Copied from https://github.com/zxteamorg/.github/blob/master/workflow-templates/docker-image-snapshot.yml
 #
 # See for documentation at https://github.com/zxteamorg/.github/blob/master/workflow-templates/docker-image.md
 #
 
-name: Docker Images (Release)
+name: Service TypeScript Docker Images (Snapshot)
 
 env:
   # Repo-root relative path to directory with your Dockerfile(s)
@@ -14,15 +14,14 @@ env:
   # Define one of test report format: dart-json, dotnet-trx, flutter-json, java-junit, jest-junit, mocha-json
   TEST_REPORT_FORMAT: java-junit
   # Set path to GitHub Container Repository
-  REGISTRY_GHCR_REPOSITORY_PATH: "${{ github.repository }}/typescript-service"
-  # To enable publish into Docker Hub (https://hub.docker.com/)
-  # by set Docker Hub user/organization ID
-  REGISTRY_DOCKERHUB_REPOSITORY_ORG: "theanurin"
+  REGISTRY_GHCR_REPOSITORY_PATH: "${{ github.repository }}/service-typescript"
 
 on:
   push:
+    branches:
+      - 'service-typescript#*'
     tags:
-      - 'typescript-service-*'
+      - 'service-typescript-*'
 
 run-name: Docker Images (${{ format('{0}.{1}', github.ref_name, github.sha) }})
 
@@ -35,7 +34,6 @@ jobs:
       build_commit_short_sha: ${{ steps.build_vars.outputs.commit_short_sha }}
       build_commit_ref: ${{ steps.build_vars.outputs.commit_ref }}
       build_commit_timestamp: ${{ steps.build_vars.outputs.commit_timestamp }}
-      build_dockerhub_publish: ${{ steps.build_vars.outputs.dockerhub_publish }}
       build_image_tag_version: ${{ steps.build_vars.outputs.image_tag_version }}
       build_image_tag_version_major: ${{ steps.build_vars.outputs.image_tag_version_major }}
       build_image_tag_version_major_minor: ${{ steps.build_vars.outputs.image_tag_version_major_minor }}
@@ -53,7 +51,7 @@ jobs:
       build_test_dockerfiles_count: ${{ steps.dockerfiles.outputs.test_dockerfiles_count }}
     steps:
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Detect build platforms
       id: platforms
@@ -96,38 +94,41 @@ jobs:
       id: build_vars
       run: |
         BUILD_RC_VERSION=""
-        if echo -n "${{ github.ref_name }}" | egrep -qe '-rc[0-9]+$'; then
-          BUILD_RC_VERSION="$(echo -n "${{ github.ref_name }}" | sed 's/^.*-rc//')"
+        if [ "${{ github.ref_type}}" == "tag" ]; then
+          if echo -n "${{ github.ref_name }}" | egrep -qe '-rc[0-9]+$'; then
+            BUILD_RC_VERSION="$(echo -n "${{ github.ref_name }}" | sed 's/^.*-rc//')"
+          fi
         fi
         SHORT_SHA=$(echo "${{ github.sha }}" | head -c 8)
         BUILD_PIPELINE_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
         BUILD_COMMIT_REF="${{ github.sha }}"
         BUILD_COMMIT_TIMESTAMP="${{ github.event.head_commit.timestamp }}"
         BUILD_PROJECT_URL="${{ github.server_url }}/${{ github.repository }}"
-        if [ -n "${BUILD_RC_VERSION}" ]; then
-          BUILD_TAG_VERSION="$(echo -n "${{ github.ref_name }}" | rev | cut -d- -f2 | rev)"
-          BUILD_VERSION_APPENDER="-rc${BUILD_RC_VERSION}"
-          BUILD_IS_RELEASE_CANDIDATE="yes"
-          BUILD_IMAGE_TAG_VERSION="${BUILD_TAG_VERSION}-rc${BUILD_RC_VERSION}"
+        if [ "${{ github.ref_type}}" == "tag" ]; then
+          if [ -n "${BUILD_RC_VERSION}" ]; then
+            BUILD_TAG_VERSION="$(echo -n "${{ github.ref_name }}" | rev | cut -d- -f2 | rev)"
+            BUILD_VERSION_APPENDER="-rc${BUILD_RC_VERSION}-snapshot"
+            BUILD_IS_RELEASE_CANDIDATE="yes"
+            BUILD_IMAGE_TAG_VERSION="${BUILD_TAG_VERSION}-rc${BUILD_RC_VERSION}"
+          else
+            BUILD_TAG_VERSION="$(echo -n "${{ github.ref_name }}" | rev | cut -d- -f1 | rev)"
+            BUILD_VERSION_APPENDER="-snapshot"
+            BUILD_IS_RELEASE_CANDIDATE="no"
+            BUILD_TAG_VERSION_MAJOR="$(echo "${BUILD_TAG_VERSION}" | cut -d. -f1)"
+            BUILD_TAG_VERSION_MAJOR_MINOR="$(echo "${BUILD_TAG_VERSION}" | cut -d. -f1-2)"
+            BUILD_IMAGE_TAG_VERSION="${BUILD_TAG_VERSION}"
+            BUILD_IMAGE_TAG_VERSION_MAJOR="${BUILD_TAG_VERSION_MAJOR}"
+            BUILD_IMAGE_TAG_VERSION_MAJOR_MINOR="${BUILD_TAG_VERSION_MAJOR_MINOR}"
+          fi
         else
-          BUILD_TAG_VERSION=$(echo -n "${{ github.ref_name }}" | rev | cut -d- -f1 | rev)
-          BUILD_VERSION_APPENDER=""
-          BUILD_IS_RELEASE_CANDIDATE="no"
-          BUILD_TAG_VERSION_MAJOR="$(echo "${BUILD_TAG_VERSION}" | cut -d. -f1)"
-          BUILD_TAG_VERSION_MAJOR_MINOR="$(echo "${BUILD_TAG_VERSION}" | cut -d. -f1-2)"
-          BUILD_IMAGE_TAG_VERSION="${BUILD_TAG_VERSION}"
-          BUILD_IMAGE_TAG_VERSION_MAJOR="${BUILD_TAG_VERSION_MAJOR}"
-          BUILD_IMAGE_TAG_VERSION_MAJOR_MINOR="${BUILD_TAG_VERSION_MAJOR_MINOR}"
+          BUILD_IMAGE_TAG_VERSION="$(echo -n "${{ github.ref_name }}" | cut -d# -f2)"
+          BUILD_TAG_VERSION=""
+          BUILD_VERSION_APPENDER="-${BUILD_IMAGE_TAG_VERSION}.${SHORT_SHA}-snapshot"
         fi
 
         echo "commit_short_sha=${SHORT_SHA}" | tee -a "${GITHUB_OUTPUT}"
         echo "commit_ref=${BUILD_COMMIT_REF}" | tee -a "${GITHUB_OUTPUT}"
         echo "commit_timestamp=${BUILD_COMMIT_TIMESTAMP}" | tee -a "${GITHUB_OUTPUT}"
-        if [ -n "${REGISTRY_DOCKERHUB_REPOSITORY_ORG}" ]; then
-          echo "dockerhub_publish=yes" | tee -a "${GITHUB_OUTPUT}"
-        else
-          echo "dockerhub_publish=no" | tee -a "${GITHUB_OUTPUT}"
-        fi
         echo "image_tag_version=${BUILD_IMAGE_TAG_VERSION}" | tee -a "${GITHUB_OUTPUT}"
         echo "image_tag_version_major=${BUILD_IMAGE_TAG_VERSION_MAJOR}" | tee -a "${GITHUB_OUTPUT}"
         echo "image_tag_version_major_minor=${BUILD_IMAGE_TAG_VERSION_MAJOR_MINOR}" | tee -a "${GITHUB_OUTPUT}"
@@ -156,28 +157,28 @@ jobs:
         fi
 
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Set up QEMU
-      uses: docker/setup-qemu-action@v2
+      uses: docker/setup-qemu-action@v3
 
     - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v2
+      uses: docker/setup-buildx-action@v3
 
     - name: Log in to the GitHub Container Registry
-      uses: docker/login-action@v2
+      uses: docker/login-action@v3
       with:
         registry: ghcr.io
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Build docker image
-      uses: docker/build-push-action@v3
+      uses: docker/build-push-action@v6
       with:
         context: .
         file: ${{ env.DOCKER_FILES_DIR }}/${{ matrix.dockerfile }}
         build-args: |
-          BUILD_CONFIGURATION=release
+          BUILD_CONFIGURATION=snapshot
           BUILD_COMMIT_REF=${{ needs.configure.outputs.build_commit_ref }}
           BUILD_COMMIT_TIMESTAMP=${{ needs.configure.outputs.build_commit_timestamp }}
           BUILD_PIPELINE_URL=${{ needs.configure.outputs.build_pipeline_url }}
@@ -187,7 +188,7 @@ jobs:
           BUILD_VERSION_APPENDER=${{ needs.configure.outputs.build_version_appender }}
         platforms: ${{ join(fromJson(needs.configure.outputs.build_platforms), ',') }}
         push: true
-        tags: "ghcr.io/${{ env.REGISTRY_GHCR_REPOSITORY_PATH }}${{ env.DOCKERFILE_NAME_SUFFIX }}:${{ needs.configure.outputs.build_image_tag_version }}.${{ github.sha }}"
+        tags: "ghcr.io/${{ env.REGISTRY_GHCR_REPOSITORY_PATH }}${{ env.DOCKERFILE_NAME_SUFFIX }}-snapshot:${{ needs.configure.outputs.build_image_tag_version }}.${{ github.sha }}"
 
   docker-test:
     needs:
@@ -210,24 +211,24 @@ jobs:
           echo "APP_DOCKER_IMAGE_SUFFIX=/${SUFFIX}" | tee -a "${GITHUB_ENV}"
           GEN_IMAGE_SUFFIX="-${SUFFIX}" | tee -a "${GITHUB_ENV}"
         fi
-        echo "GEN_IMAGE_TAG=test-release-image${GEN_IMAGE_SUFFIX}-${PLATFORM_SLUG}" | tee -a "${GITHUB_ENV}"
+        echo "GEN_IMAGE_TAG=test-snapshot-image${GEN_IMAGE_SUFFIX}-${PLATFORM_SLUG}" | tee -a "${GITHUB_ENV}"
 
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Set up QEMU
-      uses: docker/setup-qemu-action@v2
+      uses: docker/setup-qemu-action@v3
 
     - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v2
+      uses: docker/setup-buildx-action@v3
 
     - name: Build tests image
       id: test-prepare
       run: |
         docker build \
           --platform=${{ matrix.platform }} \
-          --build-arg TEST_IMAGE="ghcr.io/${{ env.REGISTRY_GHCR_REPOSITORY_PATH }}${APP_DOCKER_IMAGE_SUFFIX}:${{ needs.configure.outputs.build_image_tag_version }}.${{ github.sha }}" \
-          --build-arg BUILD_CONFIGURATION=release \
+          --build-arg TEST_IMAGE="ghcr.io/${{ env.REGISTRY_GHCR_REPOSITORY_PATH }}${APP_DOCKER_IMAGE_SUFFIX}-snapshot:${{ needs.configure.outputs.build_image_tag_version }}.${{ github.sha }}" \
+          --build-arg BUILD_CONFIGURATION=snapshot \
           --tag "${GEN_IMAGE_TAG}" \
           --file "${DOCKER_FILES_DIR}/${{ matrix.dockerfile }}" \
           .
@@ -243,9 +244,9 @@ jobs:
       id: upload-artifact
       uses: actions/upload-artifact@v3
       with:
-        name: "test-results-release-${{ env.PLATFORM_SLUG }}${{ env.GEN_IMAGE_SUFFIX }}"
+        name: "test-results-snapshot-${{ env.PLATFORM_SLUG }}${{ env.GEN_IMAGE_SUFFIX }}"
         path: .${{ env.GEN_IMAGE_TAG }}
-        retention-days: 10
+        retention-days: 3
       if: steps.test-prepare.conclusion == 'success'
 
     - name: Generate JUnit test report
@@ -256,101 +257,6 @@ jobs:
         reporter: java-junit
         fail-on-error: true
       if: env.TEST_REPORT_FORMAT == 'java-junit' && steps.upload-artifact.conclusion == 'success'
-
-  publish-dockerhub:
-    needs:
-    - configure
-    - docker-test
-    strategy:
-      matrix:
-        dockerfile: ${{ fromJson(needs.configure.outputs.build_app_dockerfiles) }}
-    if: |
-      always() &&
-      needs.configure.outputs.build_dockerhub_publish == 'yes' &&
-      needs.configure.outputs.build_is_release_candidate == 'no' &&
-      !contains(needs.*.result, 'failure') &&
-      !contains(needs.*.result, 'cancelled')
-    runs-on: ubuntu-latest
-    steps:
-    - name: Set up environment variables
-      run: |
-        SUFFIX=$(echo "${{ matrix.dockerfile }}" | cut -d'.' -f2-)
-        if [ -n "${SUFFIX}" -a "${SUFFIX}" != "Dockerfile" ]; then
-          echo "DOCKER_IMAGE_NAME=${SUFFIX}" | tee -a "${GITHUB_ENV}"
-          echo "DOCKERFILE_NAME_SUFFIX=/${SUFFIX}" | tee -a "${GITHUB_ENV}"
-        else
-          REPOSITORY_NAME=$(echo "${{ github.repository }}" | cut -d/ -f2)
-          echo "DOCKER_IMAGE_NAME=${REPOSITORY_NAME}" | tee -a "${GITHUB_ENV}"
-        fi
-
-    - name: Log in to the GitHub Container Registry
-      uses: docker/login-action@v2
-      with:
-        registry: ghcr.io
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: Log in to the Docker Hub Registry
-      uses: docker/login-action@v2
-      with:
-        username: ${{ vars.REGISTRY_DOCKERHUB_PUSH_USERNAME }}
-        password: ${{ secrets.REGISTRY_DOCKERHUB_PUSH_TOKEN }}
-
-    - name: Tags and push
-      run: |
-        skopeo copy --all \
-          "docker://ghcr.io/${{ env.REGISTRY_GHCR_REPOSITORY_PATH }}${DOCKERFILE_NAME_SUFFIX}:${{ needs.configure.outputs.build_image_tag_version }}.${{ github.sha }}" \
-          "docker://${REGISTRY_DOCKERHUB_REPOSITORY_ORG}/${DOCKER_IMAGE_NAME}:${{ needs.configure.outputs.build_image_tag_version }}"
-        if [ "${{ needs.configure.outputs.build_is_release_candidate }}" == "no" ]; then
-          skopeo copy --all \
-            "docker://ghcr.io/${{ env.REGISTRY_GHCR_REPOSITORY_PATH }}${DOCKERFILE_NAME_SUFFIX}:${{ needs.configure.outputs.build_image_tag_version }}.${{ github.sha }}" \
-            "docker://${REGISTRY_DOCKERHUB_REPOSITORY_ORG}/${DOCKER_IMAGE_NAME}:${{ needs.configure.outputs.build_image_tag_version_major_minor }}"
-          skopeo copy --all \
-            "docker://ghcr.io/${{ env.REGISTRY_GHCR_REPOSITORY_PATH }}${DOCKERFILE_NAME_SUFFIX}:${{ needs.configure.outputs.build_image_tag_version }}.${{ github.sha }}" \
-            "docker://${REGISTRY_DOCKERHUB_REPOSITORY_ORG}/${DOCKER_IMAGE_NAME}:${{ needs.configure.outputs.build_image_tag_version_major }}"
-          skopeo copy --all \
-            "docker://ghcr.io/${{ env.REGISTRY_GHCR_REPOSITORY_PATH }}${DOCKERFILE_NAME_SUFFIX}:${{ needs.configure.outputs.build_image_tag_version }}.${{ github.sha }}" \
-            "docker://${REGISTRY_DOCKERHUB_REPOSITORY_ORG}/${DOCKER_IMAGE_NAME}:latest"
-        fi
-
-  publish-dockerhub-readme:
-    needs:
-    - configure
-    - docker-test
-    - publish-dockerhub
-    strategy:
-      matrix:
-        dockerfile: ${{ fromJson(needs.configure.outputs.build_app_dockerfiles) }}
-    if: |
-      always() &&
-      needs.configure.outputs.build_dockerhub_publish == 'yes' &&
-      needs.configure.outputs.build_is_release_candidate == 'no' &&
-      !contains(needs.*.result, 'failure') &&
-      !contains(needs.*.result, 'cancelled')
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v3
-
-    - name: Set up environment variables
-      run: |
-        SUFFIX=$(echo "${{ matrix.dockerfile }}" | cut -d'.' -f2-)
-        if [ -n "${SUFFIX}" -a "${SUFFIX}" != "Dockerfile" ]; then
-          echo "DOCKER_IMAGE_NAME=${SUFFIX}" | tee -a "${GITHUB_ENV}"
-          echo "README_FILE_NAME_SUFFIX=.${SUFFIX}" | tee -a "${GITHUB_ENV}"
-        else
-          REPOSITORY_NAME=$(echo "${{ github.repository }}" | cut -d/ -f2)
-          echo "DOCKER_IMAGE_NAME=${REPOSITORY_NAME}" | tee -a "${GITHUB_ENV}"
-        fi
-
-    - name: Update image README and description
-      uses: peter-evans/dockerhub-description@v3
-      with:
-        username: ${{ vars.REGISTRY_DOCKERHUB_PUSH_USERNAME }}
-        password: ${{ secrets.REGISTRY_DOCKERHUB_PUSH_TOKEN }}
-        repository: ${{ env.REGISTRY_DOCKERHUB_REPOSITORY_ORG }}/${{ env.DOCKER_IMAGE_NAME }}
-        short-description: ${{ github.event.repository.description }}
-        readme-filepath: ${{ env.DOCKER_FILES_DIR }}/README${{ env.README_FILE_NAME_SUFFIX }}.md
 
   publish-github:
     needs:
@@ -373,7 +279,7 @@ jobs:
         fi
 
     - name: Log in to the GitHub Container Registry
-      uses: docker/login-action@v2
+      uses: docker/login-action@v3
       with:
         registry: ghcr.io
         username: ${{ github.actor }}
@@ -382,19 +288,21 @@ jobs:
     - name: Tags and push
       run: |
         skopeo copy --all \
-          "docker://ghcr.io/${{ env.REGISTRY_GHCR_REPOSITORY_PATH }}${DOCKERFILE_NAME_SUFFIX}:${{ needs.configure.outputs.build_image_tag_version }}.${{ github.sha }}" \
-          "docker://ghcr.io/${{ env.REGISTRY_GHCR_REPOSITORY_PATH }}${DOCKERFILE_NAME_SUFFIX}:${{ needs.configure.outputs.build_image_tag_version }}.${{ needs.configure.outputs.build_commit_short_sha }}"
+          "docker://ghcr.io/${{ env.REGISTRY_GHCR_REPOSITORY_PATH }}${DOCKERFILE_NAME_SUFFIX}-snapshot:${{ needs.configure.outputs.build_image_tag_version }}.${{ github.sha }}" \
+          "docker://ghcr.io/${{ env.REGISTRY_GHCR_REPOSITORY_PATH }}${DOCKERFILE_NAME_SUFFIX}-snapshot:${{ needs.configure.outputs.build_image_tag_version }}.${{ needs.configure.outputs.build_commit_short_sha }}"
         skopeo copy --all \
-          "docker://ghcr.io/${{ env.REGISTRY_GHCR_REPOSITORY_PATH }}${DOCKERFILE_NAME_SUFFIX}:${{ needs.configure.outputs.build_image_tag_version }}.${{ github.sha }}" \
-          "docker://ghcr.io/${{ env.REGISTRY_GHCR_REPOSITORY_PATH }}${DOCKERFILE_NAME_SUFFIX}:${{ needs.configure.outputs.build_image_tag_version }}"
-        if [ "${{ needs.configure.outputs.build_is_release_candidate }}" == "no" ]; then
+          "docker://ghcr.io/${{ env.REGISTRY_GHCR_REPOSITORY_PATH }}${DOCKERFILE_NAME_SUFFIX}-snapshot:${{ needs.configure.outputs.build_image_tag_version }}.${{ github.sha }}" \
+          "docker://ghcr.io/${{ env.REGISTRY_GHCR_REPOSITORY_PATH }}${DOCKERFILE_NAME_SUFFIX}-snapshot:${{ needs.configure.outputs.build_image_tag_version }}"
+        if [ "${{ github.ref_type }}" == "tag" ]; then
+          if [ "${{ needs.configure.outputs.build_is_release_candidate }}" == "no" ]; then
+            skopeo copy --all \
+              "docker://ghcr.io/${{ env.REGISTRY_GHCR_REPOSITORY_PATH }}${DOCKERFILE_NAME_SUFFIX}-snapshot:${{ needs.configure.outputs.build_image_tag_version }}.${{ github.sha }}" \
+              "docker://ghcr.io/${{ env.REGISTRY_GHCR_REPOSITORY_PATH }}${DOCKERFILE_NAME_SUFFIX}-snapshot:${{ needs.configure.outputs.build_image_tag_version_major_minor }}"
+            skopeo copy --all \
+              "docker://ghcr.io/${{ env.REGISTRY_GHCR_REPOSITORY_PATH }}${DOCKERFILE_NAME_SUFFIX}-snapshot:${{ needs.configure.outputs.build_image_tag_version }}.${{ github.sha }}" \
+              "docker://ghcr.io/${{ env.REGISTRY_GHCR_REPOSITORY_PATH }}${DOCKERFILE_NAME_SUFFIX}-snapshot:${{ needs.configure.outputs.build_image_tag_version_major }}"
+          fi
           skopeo copy --all \
-            "docker://ghcr.io/${{ env.REGISTRY_GHCR_REPOSITORY_PATH }}${DOCKERFILE_NAME_SUFFIX}:${{ needs.configure.outputs.build_image_tag_version }}.${{ github.sha }}" \
-            "docker://ghcr.io/${{ env.REGISTRY_GHCR_REPOSITORY_PATH }}${DOCKERFILE_NAME_SUFFIX}:${{ needs.configure.outputs.build_image_tag_version_major_minor }}"
-          skopeo copy --all \
-            "docker://ghcr.io/${{ env.REGISTRY_GHCR_REPOSITORY_PATH }}${DOCKERFILE_NAME_SUFFIX}:${{ needs.configure.outputs.build_image_tag_version }}.${{ github.sha }}" \
-            "docker://ghcr.io/${{ env.REGISTRY_GHCR_REPOSITORY_PATH }}${DOCKERFILE_NAME_SUFFIX}:${{ needs.configure.outputs.build_image_tag_version_major }}"
-          skopeo copy --all \
-            "docker://ghcr.io/${{ env.REGISTRY_GHCR_REPOSITORY_PATH }}${DOCKERFILE_NAME_SUFFIX}:${{ needs.configure.outputs.build_image_tag_version }}.${{ github.sha }}" \
-            "docker://ghcr.io/${{ env.REGISTRY_GHCR_REPOSITORY_PATH }}${DOCKERFILE_NAME_SUFFIX}:latest"
+            "docker://ghcr.io/${{ env.REGISTRY_GHCR_REPOSITORY_PATH }}${DOCKERFILE_NAME_SUFFIX}-snapshot:${{ needs.configure.outputs.build_image_tag_version }}.${{ github.sha }}" \
+            "docker://ghcr.io/${{ env.REGISTRY_GHCR_REPOSITORY_PATH }}${DOCKERFILE_NAME_SUFFIX}-snapshot:latest"
         fi
