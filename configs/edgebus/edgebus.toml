@@ -1,0 +1,118 @@
+# Enable (turn on) specific servers ONLY
+#"edgebus.runtime.server.indexes" = "management ingress egress"
+
+# Enable (turn on) specific endpoints ONLY
+#"edgebus.runtime.endpoint.indexes" = "info management ingress egress"
+
+
+# Configure web server "management"
+[[edgebus.runtime.server]]
+	index = "management"
+	listenHost = "0.0.0.0"
+	listenPort = "8081"
+	type = "http"
+# /Configure web server "management"
+
+# Configure web servers for ingresses
+[[edgebus.runtime.server]]
+	index = "ingress0"
+	listenHost = "0.0.0.0"
+	listenPort = "8090"
+	type = "http"
+[[edgebus.runtime.server]]
+	index = "ingress1"
+	listenHost = "0.0.0.0"
+	listenPort = "8091"
+	type = "http"
+# /Configure web servers for ingresses
+
+# Configure web server "egress"
+[[edgebus.runtime.server]]
+	index = "egress"
+	listenHost = "0.0.0.0"
+	listenPort = "8083"
+	type = "http"
+# /Configure web server "egress"
+
+
+# Configure endpoint "info"
+[[edgebus.runtime.endpoint]]
+	index = "info"
+	type = "rest-info"
+	servers = "management ingress egress"
+	bindPath = "/info"
+	[edgebus.runtime.endpoint.info.cors]
+		methods = "GET"
+		whiteList = "*"
+		allowedHeaders = "*"
+# /Configure endpoint "info"
+
+# Configure endpoint "management"
+[[edgebus.runtime.endpoint]]
+	index = "management"
+	type = "rest-management"
+	servers = "management"
+	bindPath = "/management"
+# /Configure endpoint "management"
+
+# # Configure endpoint "ingress"
+# [[edgebus.runtime.endpoint]]
+# 	index = "ingress"
+# 	type = "rest-ingress"
+# 	servers = "ingress"
+# 	bindPath = "/ingress"
+# # /Configure endpoint "ingress"
+
+# Configure endpoint "egress"
+[[edgebus.runtime.endpoint]]
+	index = "egress"
+	type = "rest-egress"
+	servers = "egress"
+	bindPath = "/egress"
+# /Configure endpoint "egress"
+
+
+# Message Bus implementation
+[edgebus.runtime.messagebus]
+	kind = "bull"
+	[edgebus.runtime.messagebus.bull]
+		redisUrl = "redis://redis:6379/0"
+# /Message Bus implementation
+
+
+# Persistent storage URL (Postgres only at the moment)
+[edgebus.runtime.persistent]
+	url = "postgres://edgebus-local-owner@postgres:5432/edgebus-local?schema=runtime"
+# /Persistent storage URL (Postgres only at the moment)
+
+[[edgebus.setup.topic]]
+	index = "TOPC0730c8b1ebdd4761b90e82f59f140c32"
+	name = "my-topic-1"
+	description = "Some messages 1"
+	mediaType = "application/json"
+
+[[edgebus.setup.topic]]
+	index = "TOPC950f617737c34befb2362bc1e7635ac1"
+	name = "my-topic-2"
+	description = "Some messages 2"
+	mediaType = "application/json"
+
+[[edgebus.setup.ingress]]
+	index = "IGRS4201daaa5d6948d9956dd7d6857af300"
+	kind = "HTTP_HOST"
+	path = "/callback1"
+	target_topic_id = "TOPC0730c8b1ebdd4761b90e82f59f140c32"
+	[edgebus.setup.ingress.response]
+		kind = "static"
+		[edgebus.setup.ingress.response.static]
+			status_code = 201
+			status_message = "Accepted"
+			body = '{ "success": true }'
+			[edgebus.setup.ingress.response.static.header]
+				"Content-Type" = "application/json"
+
+[[edgebus.setup.egress]]
+	index = "EGRS12cacb728ecf463bb2b5ebf3ae9e0edb"
+	kind = "WEB_SOCKET_HOST"
+	source_topic_ids = "TOPC0730c8b1ebdd4761b90e82f59f140c32"
+	filter_label_policy = "ignore" # Deliver a message always (ignore label filter at all)

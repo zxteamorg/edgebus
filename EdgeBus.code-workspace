@@ -1,27 +1,27 @@
 {
 	"folders": [
 		{
-			"name": "EdgeBus Documentation",
+			"name": "Documentation",
 			"path": "docs"
 		},
 		{
-			"name": "EdgeBus Database",
+			"name": "Database",
 			"path": "database"
 		},
 		{
-			"name": "EdgeBus Deployment Local",
-			"path": "deployment-local"
+			"name": "Console Dart",
+			"path": "console-dart"
 		},
 		{
-			"name": "EdgeBus Dart Console",
-			"path": "src-dart-console"
+			"name": "SDK Dart",
+			"path": "sdk-dart"
 		},
 		{
-			"name": "EdgeBus TypeScript Service",
-			"path": "src-typescript-service"
+			"name": "Service TypeScript",
+			"path": "service-typescript"
 		},
 		{
-			"name": "EdgeBus Workspace",
+			"name": "Workspace",
 			"path": "."
 		}
 	],
@@ -31,7 +31,13 @@
 		"git.rebaseWhenSync": true,
 		"cSpell.words": [
 			"worktree"
-		]
+		],
+		"markdownlint.config": {
+			"default": true,
+			"blanks-around-fences": false,
+			"no-hard-tabs": false,
+			"first-line-h1": false,
+		}
 	},
 	"extensions": {
 		"recommendations": [
@@ -40,7 +46,6 @@
 			"bierner.markdown-mermaid",
 			"davidanson.vscode-markdownlint"
 		]
-	}
+	},
+	
 }
-
-

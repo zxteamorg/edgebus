@@ -1,0 +1,22 @@
+{
+	"Servers": {
+		"1": {
+			"Name": "Inside Docker (user: postgres, no password)",
+			"Group": "Servers",
+			"Port": 5432,
+			"Username": "postgres",
+			"Host": "postgres",
+			"MaintenanceDB": "postgres",
+			"SSLMode": "disable"
+		},
+		"2": {
+			"Name": "Inside Docker (user: edgebus-local-owner, no password)",
+			"Group": "Servers",
+			"Port": 5432,
+			"Username": "edgebus-local-owner",
+			"Host": "postgres",
+			"MaintenanceDB": "edgebus-local",
+			"SSLMode": "disable"
+		}
+	}
+}

@@ -20,19 +20,27 @@
 	"files.exclude": {
 		"database": true,
 		"docs": true,
-		"deployment-local": true,
-		"src-*": true,
+		"console-*": true,
+		"sdk-*": true,
+		"service-*": true,
 	},
 	"git.rebaseWhenSync": true,
 	"editor.guides.indentation": true,
 	"cSpell.words": [
 		"auditability",
 		"edgebus",
-		"worktree"
-	],
-	"markdownlint.config": {
-		"default": true,
-		"blanks-around-fences": false,
-		"no-hard-tabs": false,
-	}
+		"worktree",
+		"dbseed",
+		"devel",
+		"domainname",
+		"EDGEBUS",
+		"HTTPDUMP",
+		"IMAGETAG",
+		"pgadmin",
+		"qoomon",
+		"REDISCOMMANDER",
+		"theanurin",
+		"USEDATAVOLUME",
+		"USEDBSEED"
+	]
 }
