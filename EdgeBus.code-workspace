@@ -21,6 +21,10 @@
 			"path": "service-typescript"
 		},
 		{
+			"name": "Dashboard",
+			"path": "dashboard"
+		},
+		{
 			"name": "Workspace",
 			"path": "."
 		}
