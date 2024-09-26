@@ -53,6 +53,12 @@
 	type = "rest-management"
 	servers = "management"
 	bindPath = "/management"
+	[edgebus.runtime.endpoint.assets]
+		path = "../dashboard/dist"
+	[edgebus.runtime.endpoint.cors]
+		methods = "*"
+		whiteList = "*"
+		allowedHeaders = "*"
 # /Configure endpoint "management"
 
 # Configure endpoint "egress"

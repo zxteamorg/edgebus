@@ -111,6 +111,7 @@ export namespace Settings {
 		readonly type: "rest-info";
 	}	export interface RestManagementEndpoint extends BaseRestEndpoint {
 		readonly type: "rest-management";
+		readonly assets: Settings.Assets | null;
 	}
 	// export interface RestIngressEndpoint extends BaseRestEndpoint {
 	// 	readonly type: "rest-ingress";
@@ -147,6 +148,10 @@ export namespace Settings {
 		readonly methods: ReadonlyArray<string>;
 		readonly whiteList: ReadonlyArray<string>;
 		readonly allowedHeaders: ReadonlyArray<string>;
+	}
+
+	export interface Assets {
+		readonly path: string | null;
 	}
 
 	export interface SSL {
@@ -321,7 +326,11 @@ function parseEndpoint(endpointConfiguration: FConfiguration): Settings.Endpoint
 			const cors = endpointConfiguration.hasNamespace("cors")
 				? parseCors(endpointConfiguration.getNamespace("cors")) : null;
 
+				const assets = endpointConfiguration.hasNamespace("assets")
+				? parseAssets(endpointConfiguration.getNamespace("assets")) : null;
+
 			const httpEndpoint: Settings.RestManagementEndpoint = Object.freeze({
+				assets,
 				type: endpointType,
 				servers: endpointConfiguration.get("servers").asString.split(" "),
 				bindPath: endpointConfiguration.get("bindPath", "/").asString,
@@ -366,6 +375,11 @@ function parseCors(corsConfiguration: FConfiguration): Settings.Cors {
 	const whiteList: ReadonlyArray<string> = Object.freeze(corsConfiguration.get("whiteList").asString.split(" "));
 	const allowedHeaders: ReadonlyArray<string> = Object.freeze(corsConfiguration.get("allowedHeaders").asString.split(" "));
 	return Object.freeze({ methods, whiteList, allowedHeaders });
+}
+
+function parseAssets(staticConfiguration: FConfiguration): Settings.Assets {
+	const path: string | null = staticConfiguration.get("path").asStringNullable;
+	return Object.freeze({ path });
 }
 
 function parseSsl(sslConfiguration: FConfiguration): Settings.SSL {

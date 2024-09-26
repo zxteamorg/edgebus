@@ -12,7 +12,8 @@ import {
 	MessageIdentifier,
 	TopicIdentifier,
 	ensureIngressHttpResponseKind,
-	ensureIngressHttpHostResponseDynamicKind
+	ensureIngressHttpHostResponseDynamicKind,
+	IdentifierPrefix
 } from "../../model";
 import { Delivery, Egress, Ingress, Message, Topic, ensureEgressKind, ensureIngressKind } from "../../model";
 import { SqlDatabase } from "../sql_database";
@@ -20,6 +21,9 @@ import { Database } from "../database";
 import { Label } from "../../model/label";
 import { LabelHandler, ensureLabelHandlerKind } from "../../model/label_handler";
 import { ensureEgressFilterLabelPolicy } from "../../model/egress";
+import { IngressManagement } from "../../model/ingress";
+import { Meta } from "../../model/meta";
+import { ManagementMessage } from "../../model/message";
 
 export class PostgresDatabase extends SqlDatabase {
 	public constructor(sqlConnectionFactory: FSqlConnectionFactoryPostgres) {
@@ -821,14 +825,37 @@ export class PostgresDatabase extends SqlDatabase {
 		return topicModel;
 	}
 
+	public async getMeta(
+		executionContext: FExecutionContext,
+	): Promise<Meta> {
+		const sqlRecord: FSqlResultRecord = await this.sqlConnection
+			.statement(`
+			SELECT 
+				(SELECT COUNT(id) FROM "tb_topic") AS "topics_count",
+				(SELECT COUNT(id) FROM "tb_label") AS "labels_count",
+				(SELECT COUNT(id) FROM "tb_ingress") AS "ingresses_count",
+				(SELECT COUNT(id) FROM "tb_egress") AS "egresses_count"
+		`)
+			.executeSingle(
+				executionContext
+			);
+
+		return PostgresDatabase._mapMetaDbRow(sqlRecord);
+	}
+
 	public async listEgresses(
 		executionContext: FExecutionContext,
+		opts?: { search?: string; }
 	): Promise<Array<Egress>> {
 		this.verifyInitializedAndNotDisposed();
 
 		const conditionStatements: Array<string> = [
 			`E."utc_deleted_date" IS NULL`
 		];
+		if (opts?.search) {
+			conditionStatements.push(`E."kind"::TEXT ILIKE '%${opts.search}%'
+				OR '${IdentifierPrefix.EGRESS}' || REPLACE(E."api_uuid"::TEXT, '-', '') ILIKE '%${opts.search}%'`)
+		}
 		const conditionParams: Array<FSqlStatementParam> = [];
 
 		const sqlRecords: ReadonlyArray<FSqlResultRecord> = await this.sqlConnection
@@ -902,12 +929,16 @@ export class PostgresDatabase extends SqlDatabase {
 
 	public async listTopics(
 		executionContext: FExecutionContext,
+		opts?: { search?: string; }
 	): Promise<Array<Topic>> {
 		this.verifyInitializedAndNotDisposed();
 
 		const conditionStatements: Array<string> = [
 			`"utc_deleted_date" IS NULL`
 		];
+		if (opts?.search) {
+			conditionStatements.push(`"name" ILIKE '%${opts.search}%' OR "description" ILIKE '%${opts.search}%' OR '${IdentifierPrefix.TOPIC}' || REPLACE("api_uuid"::TEXT, '-', '') ILIKE '%${opts.search}%'`)
+		}
 		const conditionParams: Array<FSqlStatementParam> = [];
 
 		const sqlRecords: ReadonlyArray<FSqlResultRecord> = await this.sqlConnection
@@ -925,6 +956,38 @@ export class PostgresDatabase extends SqlDatabase {
 		return topicModels;
 	}
 
+	public async listIngesses(
+		executionContext: FExecutionContext,
+		opts?: { search?: string }
+	): Promise<Array<IngressManagement>> {
+		this.verifyInitializedAndNotDisposed();
+
+		const conditionStatements: Array<string> = [
+			`I."utc_deleted_date" IS NULL`
+		];
+		if (opts?.search) {
+			conditionStatements.push(`I."kind"::TEXT ILIKE '%${opts.search}%'
+				OR '${IdentifierPrefix.TOPIC}' || REPLACE(T."api_uuid"::TEXT, '-', '') ILIKE '%${opts.search}%'
+				OR '${IdentifierPrefix.INGRESS}' || REPLACE(I."api_uuid"::TEXT, '-', '') ILIKE '%${opts.search}%'`)
+		}
+		const conditionParams: Array<FSqlStatementParam> = [];
+
+		const sqlRecords: ReadonlyArray<FSqlResultRecord> = await this.sqlConnection
+			.statement(`
+					SELECT I."kind", I."api_uuid", I."utc_created_date", I."utc_deleted_date", T."api_uuid" AS "topic_api_uuid"
+					FROM "tb_ingress" AS I
+						INNER JOIN "tb_topic" AS T ON T."id" = I."topic_id"
+					WHERE ${conditionStatements.map((condition) => `(${condition})`).join(" AND ")}
+				`)
+			.executeQuery(
+				executionContext,
+				...conditionParams,
+			);
+
+		const ingessManagementModels: Array<IngressManagement> = sqlRecords.map(PostgresDatabase._mapIngressManagementDbRow);
+		return ingessManagementModels;
+	}
+
 	public async listVersions(
 		executionContext: FExecutionContext
 	): Promise<Array<string>> {
@@ -932,6 +995,90 @@ export class PostgresDatabase extends SqlDatabase {
 			.statement('SELECT "version" FROM "public"."__migration" ORDER BY "version" DESC')
 			.executeQuery(executionContext);
 		return versionRows.map(versionRow => versionRow.get("version").asString);
+	}
+
+	public async listMessages(
+		executionContext: FExecutionContext,
+		opts?: { search?: string; }
+	): Promise<Array<ManagementMessage>> {
+		this.verifyInitializedAndNotDisposed();
+
+		const conditionStatements: Array<string> = [];
+		if (opts?.search) {
+			conditionStatements.push(`M."media_type" ILIKE '%${opts.search}%' 
+				OR '${IdentifierPrefix.MESSAGE}' || REPLACE(M."api_uuid"::TEXT, '-', '') ILIKE '%${opts.search}%'
+				OR '${IdentifierPrefix.INGRESS}' || REPLACE(I."api_uuid"::TEXT, '-', '') ILIKE '%${opts.search}%'
+				OR '${IdentifierPrefix.TOPIC}' || REPLACE(T."api_uuid"::TEXT, '-', '') ILIKE '%${opts.search}%'`)
+		}
+		const conditionParams: Array<FSqlStatementParam> = [];
+
+		const sqlRecords: ReadonlyArray<FSqlResultRecord> = await this.sqlConnection
+			.statement(`
+					SELECT 
+						M."api_uuid",
+						I."api_uuid" AS "ingress_uuid",
+						T."api_uuid" AS "topic_uuid",
+						M."media_type",
+						M."body",
+						M."original_body",
+						M."headers",
+						M."utc_created_at"
+					FROM "tb_message" AS M
+					INNER JOIN "tb_ingress" AS I ON I."id" = M."ingress_id"
+					INNER JOIN "tb_topic" AS T ON T."id" = M."topic_id"
+						${conditionStatements.length > 0 ? `WHERE ${conditionStatements.map((condition) => `(${condition})`).join(" AND ")}` : ''}
+					ORDER BY M."utc_created_at" DESC
+				`)
+			.executeQuery(
+				executionContext,
+				...conditionParams,
+			);
+
+		const messageModels: Array<ManagementMessage> = sqlRecords.map(e => PostgresDatabase._mapMessageManagementDbRow(e));
+		return messageModels;
+	}
+
+	public async findMessage(
+		executionContext: FExecutionContext,
+		messageId: MessageIdentifier
+	): Promise<ManagementMessage | null> {
+		this.verifyInitializedAndNotDisposed();
+
+		const sqlRecord: FSqlResultRecord | null = await this.sqlConnection
+			.statement(`
+					SELECT 
+						M."api_uuid",
+						I."api_uuid" AS "ingress_uuid",
+						T."api_uuid" AS "topic_uuid",
+						M."media_type",
+						M."body",
+						M."original_body",
+						M."headers",
+						M."utc_created_at"
+					FROM "tb_message" AS M
+					INNER JOIN "tb_ingress" AS I ON I."id" = M."ingress_id"
+					INNER JOIN "tb_topic" AS T ON T."id" = M."topic_id"
+						WHERE M."api_uuid" = $1
+				`)
+			.executeSingleOrNull(
+				executionContext,
+				messageId.uuid,
+			);
+
+		return sqlRecord ? PostgresDatabase._mapMessageManagementDbRow(sqlRecord) : null;
+	}
+
+	public async getMessage(
+		executionContext: FExecutionContext,
+		messageId: MessageIdentifier
+	): Promise<ManagementMessage> {
+		const messageModel: ManagementMessage | null = await this.findMessage(executionContext, messageId);
+
+		if (messageModel === null) {
+			throw new FExceptionInvalidOperation(`Trying to get non-existing topic.`);
+		}
+
+		return messageModel;
 	}
 
 	public async lockEgressMessageQueue(
@@ -1269,6 +1416,36 @@ export class PostgresDatabase extends SqlDatabase {
 		}
 	}
 
+	private static _mapMessageManagementDbRow(
+		sqlRecord: FSqlResultRecord,
+		// labels: ReadonlyArray<Label>,
+	): ManagementMessage {
+		const messageUuid: string = sqlRecord.get("api_uuid").asString;
+		const headers: Record<string, string> = sqlRecord.get("headers").asObject;
+		const mediaType: string = sqlRecord.get("media_type").asString;
+		const ingressBody: Uint8Array | null = sqlRecord.get("original_body").asBinaryNullable;
+		const body: Uint8Array = sqlRecord.get("body").asBinary;
+		const topicUuid: string = sqlRecord.get("topic_uuid").asString;
+		const ingressUuid: string = sqlRecord.get("ingress_uuid").asString;
+		const createAt: Date = sqlRecord.get("utc_created_at").asDate;
+
+		const messageId: MessageIdentifier = MessageIdentifier.fromUuid(messageUuid);
+		const topicId: TopicIdentifier = TopicIdentifier.fromUuid(topicUuid);
+		const ingressId: IngressIdentifier = IngressIdentifier.fromUuid(ingressUuid);
+
+		return {
+			messageId,
+			messageHeaders: headers,
+			messageMediaType: mediaType,
+			messageIngressBody: ingressBody ?? body,
+			messageBody: body,
+			topicId,
+			ingressId,
+			createAt
+			// messageLabels: labels
+		}
+	}
+
 	private static _mapLabelDbRow(
 		sqlRow: FSqlResultRecord
 	): Label {
@@ -1342,4 +1519,46 @@ export class PostgresDatabase extends SqlDatabase {
 
 		return Object.freeze<Topic>(topic);
 	}
+
+	private static _mapIngressManagementDbRow(
+		sqlRow: FSqlResultRecord
+	): IngressManagement {
+		const ingressUuid: string = sqlRow.get("api_uuid").asString;
+		const ingressTopicUuid: string = sqlRow.get("topic_api_uuid").asString;
+		const ingressKind: string = sqlRow.get("kind").asString;
+		const ingressCreatedAt: Date = sqlRow.get("utc_created_date").asDate;
+		const ingressDeletedAt: Date | null = sqlRow.get("utc_deleted_date").asDateNullable;
+
+		ensureIngressKind(ingressKind);
+
+		const ingress: IngressManagement = {
+			ingressId: IngressIdentifier.fromUuid(ingressUuid),
+			ingressTopicId: TopicIdentifier.fromUuid(ingressTopicUuid),
+			ingressKind,
+			ingressCreatedAt,
+			ingressDeletedAt
+		};
+
+		return Object.freeze<IngressManagement>(ingress);
+	}
+
+
+	private static _mapMetaDbRow(
+		sqlRow: FSqlResultRecord
+	): Meta {
+		const topicsCount: string = sqlRow.get("topics_count").asString;
+		const labelsCount: string = sqlRow.get("labels_count").asString;
+		const ingressesCount: string = sqlRow.get("ingresses_count").asString;
+		const egressesCount: string = sqlRow.get("egresses_count").asString;
+
+		const meta: Meta = {
+			topicsCount,
+			labelsCount,
+			ingressesCount,
+			egressesCount
+		};
+
+		return Object.freeze<Meta>(meta);
+	}
+
 }

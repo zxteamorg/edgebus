@@ -4,6 +4,9 @@ import { EgressIdentifier, IngressIdentifier, MessageIdentifier, TopicIdentifier
 import { Delivery, Egress, Ingress, Message, Topic } from "../model";
 import { Label } from "../model/label";
 import { LabelHandler } from "../model/label_handler";
+import { IngressManagement } from "../model/ingress";
+import { Meta } from "../model/meta";
+import { ManagementMessage } from "../model/message";
 
 export abstract class Database extends FInitableBase {
 	public abstract createDelivery(
@@ -77,6 +80,7 @@ export abstract class Database extends FInitableBase {
 
 	public abstract listEgresses(
 		executionContext: FExecutionContext,
+		opts?: { search?: string; }
 	): Promise<Array<Egress>>;
 
 	public abstract listEgressMessageQueue(
@@ -88,11 +92,38 @@ export abstract class Database extends FInitableBase {
 
 	public abstract listTopics(
 		executionContext: FExecutionContext,
+		opts?: {
+			search?: string;
+		}
 	): Promise<Array<Topic>>
+
+	public abstract getMeta(
+		executionContext: FExecutionContext,
+	): Promise<Meta>
+
+	public abstract listIngesses(
+		executionContext: FExecutionContext,
+		opts?: { search?: string }
+	): Promise<Array<IngressManagement>>
 
 	public abstract listVersions(
 		executionContext: FExecutionContext,
 	): Promise<Array<string>>;
+
+	public abstract listMessages(
+		executionContext: FExecutionContext,
+		opts?: { search?: string; }
+	): Promise<Array<ManagementMessage>>;
+
+	public abstract getMessage(
+		executionContext: FExecutionContext,
+		messageId: MessageIdentifier
+	): Promise<ManagementMessage>;
+
+	public abstract findMessage(
+		executionContext: FExecutionContext,
+		messageId: MessageIdentifier
+	): Promise<ManagementMessage | null>;
 
 	public abstract lockEgressMessageQueue(executionContext: FExecutionContext, opts: Topic.Id & Egress.Id & Message.Id): Promise<void>;
 

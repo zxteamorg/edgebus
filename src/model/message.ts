@@ -1,4 +1,4 @@
-import { MessageIdentifier } from "./identifiers";
+import { IngressIdentifier, MessageIdentifier, TopicIdentifier } from "./identifiers";
 import { Label } from "./label";
 
 export namespace Message {
@@ -69,6 +69,12 @@ export namespace Message {
 	// 		REJECTED = "REJECTED"
 	// 	}
 	// }
+	export interface Management {
+		readonly topicId: TopicIdentifier;
+		readonly ingressId: IngressIdentifier;
+		readonly createAt: Date;
+	}
 }
 
 export type Message = Message.Id & Message.Data & Message.Labels/* & Message.Status*/;
+export type ManagementMessage = Message.Id & Message.Data & Message.Management;

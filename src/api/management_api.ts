@@ -9,10 +9,14 @@ import {
 	IngressIdentifier, Ingress,
 	LabelHandlerIdentifier, LabelHandler,
 	LabelIdentifier, Label,
-	TopicIdentifier
+	TopicIdentifier,
+	MessageIdentifier
 } from "../model";
 import { Database } from "../data/database";
 import { MessageBus } from "../messaging/message_bus";
+import { IngressManagement } from "../model/ingress";
+import { Meta } from "../model/meta";
+import { ManagementMessage } from "../model/message";
 
 /**
  * Management API allows to control user's delivery endpoints, like add/remove webhooks
@@ -96,11 +100,11 @@ export class ManagementApi extends FInitableBase {
 	): Promise<Label> {
 		this.verifyInitializedAndNotDisposed();
 
-		const label: Label| null = await this._db.findLabelByValue(executionContext, labelValue);
+		const label: Label | null = await this._db.findLabelByValue(executionContext, labelValue);
 		if (label !== null) {
 			return label;
 		}
-		const newLabel =this._db.createLabel(executionContext, {labelValue});
+		const newLabel = this._db.createLabel(executionContext, { labelValue });
 
 		this._log.debug(executionContext, () => `Exit createLabelHandler with data: ${JSON.stringify(labelValue)}`);
 		return newLabel;
@@ -147,6 +151,14 @@ export class ManagementApi extends FInitableBase {
 		return ingress;
 	}
 
+	public async findMessage(executionContext: FExecutionContext, messageId: MessageIdentifier): Promise<ManagementMessage | null> {
+		this.verifyInitializedAndNotDisposed();
+
+		const message = await this._db.findMessage(executionContext, messageId);
+
+		return message;
+	}
+
 	public async findLabel(executionContext: FExecutionContext, labelId: LabelIdentifier): Promise<Label | null> {
 		this.verifyInitializedAndNotDisposed();
 
@@ -172,12 +184,52 @@ export class ManagementApi extends FInitableBase {
 	}
 
 	public async listTopics(
-		executionContext: FExecutionContext, domain: string | null
+		executionContext: FExecutionContext, domain: string | null, opts?: { search?: string; }
 	): Promise<Array<Topic>> {
 		this.verifyInitializedAndNotDisposed();
 
-		const topics: Array<Topic> = await this._db.listTopics(executionContext);
+		const topics: Array<Topic> = await this._db.listTopics(executionContext, { search: opts?.search });
 		return topics;
+	}
+
+	public async getMeta(
+		executionContext: FExecutionContext, domain: string | null
+	): Promise<Meta> {
+		this.verifyInitializedAndNotDisposed();
+
+		const meta: Meta = await this._db.getMeta(executionContext);
+		return meta;
+	}
+
+	public async listIngresses(
+		executionContext: FExecutionContext, domain: string | null,
+		opts?: { search?: string }
+	): Promise<Array<IngressManagement>> {
+		this.verifyInitializedAndNotDisposed();
+
+		const ingresses: Array<IngressManagement> = await this._db.listIngesses(executionContext, opts);
+		return ingresses;
+	}
+
+	public async listEgresses(
+		executionContext: FExecutionContext, domain: string | null,
+		opts?: { search?: string; }
+	): Promise<Array<Egress>> {
+		this.verifyInitializedAndNotDisposed();
+
+		const egresses: Array<Egress> = await this._db.listEgresses(executionContext, opts);
+		return egresses;
+	}
+
+
+	public async listMessages(
+		executionContext: FExecutionContext, domain: string | null,
+		opts?: { search?: string; }
+	): Promise<Array<any>> {
+		this.verifyInitializedAndNotDisposed();
+
+		const messages: Array<any> = await this._db.listMessages(executionContext, opts);
+		return messages;
 	}
 
 	// public async destroyTopic(

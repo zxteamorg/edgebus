@@ -117,6 +117,12 @@ export namespace Ingress {
 // 	readonly clientCommonName: string;
 // }
 
+export type IngressManagement
+	= Ingress.Id
+	& Ingress.DataBase
+	& Ingress.Instance
+	;
+
 export type Ingress
 	= Ingress.Id
 	& Ingress.Data
