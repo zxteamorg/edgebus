@@ -1,0 +1,65 @@
+<div class="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6 xl:grid-cols-4 2xl:gap-7.5">
+    <!-- Card Item Start -->
+    <div
+        class="rounded-sm border border-stroke bg-white px-7.5 py-6 shadow-default dark:border-strokedark dark:bg-boxdark">
+        <div @click.prevet="$store.main.routeTo('topics', $router);" class="cursor-pointer flex h-11.5 w-11.5 items-center justify-center rounded-full bg-meta-2 hover:bg-meta-9 dark:bg-meta-4 dark:hover:bg-meta-2">
+            <img src="images/icon/primary/topics.svg" alt="Topics" />
+        </div>
+
+        <div class="mt-4 flex items-end justify-between">
+            <div>
+                <h4 class="text-title-md font-bold text-black dark:text-white" x-text="$store.main.item?.meta?.topicsCount"></h4>
+                <span class="text-sm font-medium">Topics</span>
+            </div>
+        </div>
+    </div>
+    <!-- Card Item End -->
+
+    <!-- Card Item Start -->
+    <div
+        class="rounded-sm border border-stroke bg-white px-7.5 py-6 shadow-default dark:border-strokedark dark:bg-boxdark">
+        <div @click.prevet="$store.main.routeTo('ingresses', $router);" class="cursor-pointer flex h-11.5 w-11.5 items-center justify-center rounded-full bg-meta-2 hover:bg-meta-9 dark:bg-meta-4 dark:hover:bg-meta-2">
+            <img src="images/icon/primary/input.svg" alt="Ingress" />
+        </div>
+
+        <div class="mt-4 flex items-end justify-between">
+            <div>
+                <h4 class="text-title-md font-bold text-black dark:text-white" x-text="$store.main.item?.meta?.ingressesCount"></h4>
+                <span class="text-sm font-medium">Ingresses</span>
+            </div>
+        </div>
+    </div>
+    <!-- Card Item End -->
+
+    <!-- Card Item Start -->
+    <div
+        class="rounded-sm border border-stroke bg-white px-7.5 py-6 shadow-default dark:border-strokedark dark:bg-boxdark">
+        <div @click.prevet="$store.main.routeTo('egresses', $router);" class="cursor-pointer flex h-11.5 w-11.5 items-center justify-center rounded-full bg-meta-2 hover:bg-meta-9 dark:bg-meta-4 dark:hover:bg-meta-2">
+            <img src="images/icon/primary/output.svg" alt="Egress" />
+        </div>
+
+        <div class="mt-4 flex items-end justify-between">
+            <div>
+                <h4 class="text-title-md font-bold text-black dark:text-white" x-text="$store.main.item?.meta?.egressesCount"></h4>
+                <span class="text-sm font-medium">Egresses</span>
+            </div>
+        </div>
+    </div>
+    <!-- Card Item End -->
+
+    <!-- Card Item Start -->
+    <div
+        class="rounded-sm border border-stroke bg-white px-7.5 py-6 shadow-default dark:border-strokedark dark:bg-boxdark">
+        <div @click.prevet="$store.main.routeTo('labels', $router);" class="cursor-pointer flex h-11.5 w-11.5 items-center justify-center rounded-full bg-meta-2 hover:bg-meta-9 dark:bg-meta-4 dark:hover:bg-meta-2">
+            <img src="images/icon/primary/label.svg" alt="Label" />
+        </div>
+
+        <div class="mt-4 flex items-end justify-between">
+            <div>
+                <h4 class="text-title-md font-bold text-black dark:text-white" x-text="$store.main.item?.meta?.labelsCount"></h4>
+                <span class="text-sm font-medium">Labels</span>
+            </div>
+        </div>
+    </div>
+    <!-- Card Item End -->
+</div>

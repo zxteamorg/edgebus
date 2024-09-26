@@ -1,0 +1,44 @@
+{
+	// See https://go.microsoft.com/fwlink/?LinkId=733558
+	// for the documentation about the tasks.json format
+	"version": "2.0.0",
+	"options": {
+		"cwd": "${workspaceRoot}",
+		"env": {
+			"NODE_ENV": "development",
+			"BUILD_TARGET": "local"
+		}
+	},
+	"tasks": [
+		{
+			"label": "Postgres Database Build",
+			"group": "build",
+			"type": "shell",
+			"command": "${workspaceFolder}/postgres/migration-build.sh",
+			"options": {
+				"env": {
+					"ZONE": "local",
+				}
+			},
+			"problemMatcher": []
+		},
+		
+		{
+			"label": "Postgres Database Install (Full)",
+			"group": "none",
+			"dependsOn": [
+				"Build Postgres Database"
+			],
+			"type": "shell",
+			"command": "${workspaceFolder}/postgres/migration-up.sh",
+			"problemMatcher": []
+		},
+		{
+			"label": "PostgresDatabase Rollback (Full)",
+			"group": "none",
+			"type": "shell",
+			"command": "${workspaceFolder}/postgres/migration-down.sh",
+			"problemMatcher": []
+		}
+	]
+}

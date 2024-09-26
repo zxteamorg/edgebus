@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="128px"
+   height="32px"
+   viewBox="0 0 403.53992 103.59103"
+   version="1.1"
+   id="svg1"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs1">
+    <linearGradient
+       id="linearGradient6">
+      <stop
+         style="stop-color:#3737c8;stop-opacity:1"
+         offset="0"
+         id="stop6" />
+      <stop
+         style="stop-color:#2c2ca0;stop-opacity:1"
+         offset="1"
+         id="stop7" />
+    </linearGradient>
+    <radialGradient
+       xlink:href="#linearGradient6"
+       id="radialGradient7"
+       cx="108.1607"
+       cy="90.99588"
+       fx="108.1607"
+       fy="90.99588"
+       r="52.784084"
+       gradientTransform="matrix(-0.00168626,1.0230547,-0.93344883,-0.00153811,193.28308,-20.68358)"
+       gradientUnits="userSpaceOnUse" />
+  </defs>
+  <g
+     id="layer1"
+     transform="translate(-52.351749,-42.091435)">
+    <g
+       id="g2">
+      <g
+         id="g7"
+         transform="translate(0,-1.2169184)" />
+      <g
+         id="g1"
+         transform="translate(0,1.3416139)">
+        <rect
+           style="fill:url(#radialGradient7);fill-opacity:1;stroke-width:0.3712"
+           id="rect1"
+           width="105.56817"
+           height="103.59103"
+           x="52.351749"
+           y="40.749821"
+           ry="23.210764" />
+        <path
+           style="fill:#ffffff;stroke-width:0.242069"
+           d="m 57.065942,58.814262 c 15.400516,3.120925 35.819147,15.130384 45.016038,29.15509 l -12.682299,3.881328 25.062959,11.54167 6.26266,-25.500981 -10.83452,7.301448 C 103.39298,74.510774 87.878668,52.552844 72.541274,45.121 69.381845,47.969956 62.610992,54.306895 57.065942,58.814262 Z"
+           id="path1" />
+        <path
+           style="fill:#ffffff;stroke-width:0.159722"
+           d="m 125.07036,113.23752 18.23401,-12.19871 2.95684,6.58789 4.85202,-13.908487 -14.46599,-2.310882 4.38496,5.508042 -19.82359,7.326187 3.1599,3.83808 z"
+           id="path1-7" />
+        <path
+           style="fill:#ffffff;stroke-width:0.183907"
+           d="m 107.06608,113.61565 -24.09673,-1.2212 2.281359,6.15208 -19.48387,-8.24331 16.25274,-8.37191 0.432425,6.99366 24.029316,-3.31144 -0.32874,3.5457 z"
+           id="path1-7-7" />
+        <path
+           style="fill:#ffffff;stroke-width:0.107398"
+           d="m 122.91604,116.62144 4.98968,12.68485 4.50807,-1.92899 -2.36131,11.14577 -9.7721,-7.25787 4.73469,-0.77849 -6.93906,-11.62502 2.62518,-0.86357 z"
+           id="path1-7-7-8" />
+        <path
+           style="fill:#ffffff;stroke-width:0.107398"
+           d="m 109.17292,116.35388 -6.12144,12.42801 -3.376306,-1.67215 0.325716,11.68339 10.83511,-6.98578 -4.06273,-1.50983 7.23968,-11.70339 -2.62518,-0.86357 z"
+           id="path1-7-7-8-2" />
+      </g>
+      <text
+         xml:space="preserve"
+         style="font-size:88.1944px;fill:#000000;stroke-width:0.264583"
+         x="174.37563"
+         y="126.27969"
+         id="text7"><tspan
+           id="tspan7"
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:semi-condensed;font-size:88.1944px;font-family:'Nimbus Sans Narrow';-inkscape-font-specification:'Nimbus Sans Narrow Semi-Condensed';fill:#000000;stroke-width:0.264583"
+           x="174.37563"
+           y="126.27969">Edgebus</tspan></text>
+    </g>
+  </g>
+</svg>

@@ -1,0 +1,106 @@
+<div>
+    <!-- Breadcrumb Start -->
+    <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+            <h2 class="text-title-md2 font-bold text-black dark:text-white">
+                Ingress
+            </h2>
+
+        </div>
+        <nav>
+            <ol class="flex items-center gap-2">
+                <li>
+                    <a class="cursor-pointer font-medium" @click.prevent="$store.main.routeTo('', $router)">Dashboard
+                        /</a>
+                </li>
+                <li class="font-medium text-primary">Ingress</li>
+            </ol>
+        </nav>
+    </div>
+    <!-- Breadcrumb End -->
+
+    <!-- ====== Forms Section Start -->
+    <div class="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
+        <div class="flex flex-wrap">
+            <div class="w-full xl:w-1/2 ">
+                <div class="px-14 pt-14 pb-0 xl:pb-14">
+                    <h3 class="text-title-md3 font-bold text-black dark:text-white" x-text="$store.main.item.id"></h3>
+                    <div class="flex my-6">
+                        <p class="w-1/3 font-medium text-black text-sm dark:text-white">Topic</p>
+                        <p class="w-2/3 font-medium text-sm" x-text="$store.main.item.topicId"></p>
+                    </div>
+                    <div class="flex my-6">
+                        <p class="w-1/3 font-medium text-black text-sm dark:text-white">Kind</p>
+                        <p class="w-2/3 font-medium text-sm" x-text="$store.main.item.kind"></p>
+                    </div>
+                    <div class="flex my-6">
+                        <p class="w-1/3 font-medium text-black text-sm dark:text-white">Created at</p>
+                        <p class="w-2/3 font-medium text-sm" x-text="$store.main.item.createdAt"></p>
+                    </div>
+                </div>
+            </div>
+            <div class="w-full border-stroke dark:border-strokedark xl:w-1/2 xl:border-l-2">
+                <div class="px-14 py-14">
+                    <h3 class="text-title-md3 font-bold text-black dark:text-white">Details</h3>
+                    <div x-show="$store.main.item?.kind === 'HTTP_HOST'">
+                        <div class="flex my-6">
+                            <p class="w-1/3 font-medium text-black text-sm dark:text-white">Response kind</p>
+                            <p class="w-2/3 font-medium text-sm" x-text="$store.main.item.hostResponseKind"></p>
+                        </div>
+                        <div class="flex my-6">
+                            <p class="w-1/3 font-medium text-black text-sm dark:text-white">Path</p>
+                            <p class="w-2/3 font-medium text-sm" x-text="$store.main.item.httpHostPath"></p>
+                        </div>
+
+                        <div x-show="$store.main.item.hostResponseKind === 'STATIC'">
+                            <div class="flex my-6">
+                                <p class="w-1/3 font-medium text-black text-sm dark:text-white">Status code</p>
+                                <p class="w-2/3 font-medium text-sm"
+                                    x-text="$store.main.item.httpHostResponseStaticStatusCode"></p>
+                            </div>
+                            <div class="flex my-6">
+                                <p class="w-1/3 font-medium text-black text-sm dark:text-white">Status message</p>
+                                <p class="w-2/3 font-medium text-sm"
+                                    x-text="$store.main.item.httpHostResponseStaticStatusMessage"></p>
+                            </div>
+                            <div class="flex my-6">
+                                <p class="w-1/3 font-medium text-black text-sm dark:text-white">Headers</p>
+                                <div>
+                                    <ul>
+                                        <template
+                                            x-for="(headerEntry, index) in Object.entries($store.main.item.httpHostResponseStaticHeaders || {})">
+                                        <li>
+                                            <span class="font-medium text-sm" x-text="headerEntry[0]"></span>
+                                            <span class="font-medium text-sm">: </span>
+                                            <span class="text-sm" x-text="headerEntry[1]" ></span>
+                                        </li>
+                                        </template>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="flex my-6">
+                                <p class="w-1/3 font-medium text-black text-sm dark:text-white">Body</p>
+                                <pre class="w-2/3 font-medium text-xs"
+                                    x-text="JSON.stringify(JSON.parse($store.main.item.httpHostResponseStaticBody || '{}'), undefined, ' ')"></pre>
+                            </div>
+                        </div>
+
+                        <div x-show="$store.main.item.hostResponseKind === 'DYNAMIC'">
+                            <div class="flex my-6">
+                                <p class="w-1/3 font-medium text-black text-sm dark:text-white">Dynamic kind</p>
+                                <p class="w-2/3 font-medium text-sm"
+                                    x-text="$store.main.item.httpHostResponseDynamicHandlerKind"></p>
+                            </div>
+                            <div class="flex my-6">
+                                <p class="w-1/3 font-medium text-black text-sm dark:text-white">Script path</p>
+                                <p class="w-2/3 font-medium text-sm"
+                                    x-text="$store.main.item.httpHostResponseDynamicHandlerExternalScriptPath"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- ====== Forms Section End -->
+</div>
